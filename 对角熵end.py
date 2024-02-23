@@ -1,3 +1,4 @@
+#%% 导包
 import sympy as sp
 from sympy.physics.quantum.spin import Jx,Jy,Jz,JzKet,JzBra
 # from sympy.physics.quantum import Dagger
@@ -8,6 +9,7 @@ import numpy as np
 from scipy.special import jv
 import matplotlib.pyplot as plt
 
+#%% 理论推导
 # 提前设置符号
 t = sp.symbols('t',real=True)
 N = sp.symbols('N',real=True,positive=True)
@@ -59,14 +61,14 @@ for c in cs:
 # sp.init_printing()
 # print(S)
 # 尝试开始替换 # 这里我已经将第三方库里面的hbar替换成了1了
-# ================================================= 变量替换
+#%% 数值计算
 Delta = 1
-N=10
+N_val=10
 l = 2 # lambda=2
 v0=1
 T=0.1*np.pi
 w0=1
-t = np.linspace(0,T,100)
+tlist = np.linspace(0,T,100)
 v = np.pi
 u = np.pi-v0*(t/2-(T*np.sin(2*np.pi*t/T))/(4*np.pi))
 
@@ -75,9 +77,26 @@ j_0_p = jv(0,parameter)
 j_1_p = jv(1,parameter)
 j_0_2p = jv(0,2*parameter)
 j_1_2p = jv(1,2*parameter)
-B2 = 4*Delta*(j_0_p/v0+8*np.pi*j_1_p/(16*np.pi**2-v0**2*T**2))*np.sin(v0*T/4)**2
-B3 = -2*Delta*(j_0_p/v0+8*np.pi*j_1_p/(16*np.pi**2-v0**2*T**2))*np.sin(v0*T/2)
-B8 = l/N*(j_0_2p/v0+4*np.pi*T*j_1_2p/(4*np.pi**2-v0**2*T**2))
+B_2 = 4*Delta*(j_0_p/v0+8*np.pi*j_1_p/(16*np.pi**2-v0**2*T**2))*np.sin(v0*T/4)**2
+B_3 = -2*Delta*(j_0_p/v0+8*np.pi*j_1_p/(16*np.pi**2-v0**2*T**2))*np.sin(v0*T/2)
+B_8 = l/N*(j_0_2p/v0+4*np.pi*T*j_1_2p/(4*np.pi**2-v0**2*T**2))
+B_9 = B8
+B_11 = l/N*(T-(j_0_2p/v0-4*np.pi*j_1_2p/(v0**2*T**2-4*np.pi**2))*np.sin(v0*T))
+B_12 = l/N*(T+(j_0_2p/v0-4*np.pi*j_1_2p/(v0**2*T**2-4*np.pi**2))*np.sin(v0*T))
 
+S_num = S.subs({
+    B2:B_2,B3:B_3,
+    B8:B_8,B9:B_9,
+    B11:B_11,B12:B_12
+})
+S_num = S_num.subs({
+    nu:v,mu:u
+})
+S_num = S_num.subs({
+    N:N_val
+})
 
-
+S_f = sp.lambdify(t,S_num,'numpy')
+r = S_f(tlist)
+plt.plot(tlist,r)
+plt.show()
